@@ -4,11 +4,14 @@ const path = require('path');
 const mysql = require('mysql');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-
+const MySQLStore = require('express-mysql-session')(session);
 
   
 const app = express();
 const port = process.env.PORT || 3019;
+
+// Extract database connection details from the JAWSDB_URL environment variable
+const dbUrl = new URL(process.env.JAWSDB_URL);
 
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -16,16 +19,28 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-const dbUrl = new URL(process.env.JAWSDB_URL);
-
-const pool = mysql.createPool({
-    connectionLimit: 10,
+const dbOptions = {
     host: dbUrl.hostname,
+    port: dbUrl.port,
     user: dbUrl.username,
     password: dbUrl.password,
-    database: dbUrl.pathname.substr(1), // Remove the leading slash
-    port: dbUrl.port
-});
+    database: dbUrl.pathname.substr(1) // Removing the leading slash
+};
+
+const sessionStore = new MySQLStore(dbOptions);
+
+app.use(session({
+    key: 'session_cookie_name',
+    secret: process.env.SESSION_SECRET || 'fallbackSecretKey',
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+        secure: true, // Set to true if using https
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
 
 // Check and create tables if they don't exist
 const createUserTableQuery = `
@@ -61,18 +76,6 @@ app.use((req, res, next) => {
     }
 });
 
-app.use(session({
-    key: 'session_cookie_name',
-    secret: process.env.SESSION_SECRET || 'fallbackSecretKey',
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        secure: true, // Ensure this is true in production for HTTPS
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-}));
 
 let fetch;
 import('node-fetch').then(({ default: nodeFetch }) => {
