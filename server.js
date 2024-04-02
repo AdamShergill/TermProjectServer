@@ -135,10 +135,13 @@ app.post('/register', (req, res) => {
                 return;
             }
             console.log('User registered');
-            res.redirect('/login');
+
+            // Redirect to the client's login page
+            res.redirect('https://heartfelt-gumdrop-74e42a.netlify.app/index.html');
         });
     });
 });
+
 
 
 app.get('/login', (req, res) => {
@@ -146,27 +149,34 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  pool.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
-    if (err) return res.status(500).send('Error finding user');
-    if (results.length > 0) {
-      const user = results[0];
-      bcrypt.compare(password, user.password, (err, isMatch) => {
-        if (err) return res.status(500).send('Error comparing passwords');
-        if (isMatch) {
-          // Set session information
-          req.session.userId = user.id;
-          req.session.isAdmin = Boolean(user.is_admin); // Ensure boolean conversion
-          res.redirect('/protected');
-        } else {
-          res.send('Incorrect password');
-        }
-      });
-    } else {
-      res.send('Email not registered');
-    }
+    const { email, password } = req.body;
+    pool.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
+      if (err) {
+          return res.status(500).send('Error finding user');
+      }
+      if (results.length > 0) {
+          const user = results[0];
+          bcrypt.compare(password, user.password, (err, isMatch) => {
+              if (err) {
+                  return res.status(500).send('Error comparing passwords');
+              }
+              if (isMatch) {
+                  // Set session information
+                  req.session.userId = user.id;
+                  req.session.isAdmin = Boolean(user.is_admin); // Ensure boolean conversion
+                  
+                  // Redirect to the client's main or protected page
+                  res.redirect('https://heartfelt-gumdrop-74e42a.netlify.app/protected.html');
+              } else {
+                  res.send('Incorrect password');
+              }
+          });
+      } else {
+          res.send('Email not registered');
+      }
+    });
   });
-});
+  
 
 
 
