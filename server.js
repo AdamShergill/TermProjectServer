@@ -62,11 +62,17 @@ app.use((req, res, next) => {
 });
 
 app.use(session({
+    key: 'session_cookie_name',
     secret: process.env.SESSION_SECRET || 'fallbackSecretKey',
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true } // secure should be true in production with HTTPS
-  }));
+    cookie: { 
+        secure: true, // Ensure this is true in production for HTTPS
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
 
 let fetch;
 import('node-fetch').then(({ default: nodeFetch }) => {
@@ -75,26 +81,19 @@ import('node-fetch').then(({ default: nodeFetch }) => {
 
 
   
-  // Middleware to verify if a user is logged in and an admin
-  const verifyAdmin = (req, res, next) => {
-    if (!req.session.userId || !req.session.isAdmin) {
-      return res.status(403).send('Unauthorized');
+  // Middleware to verify if a user is logged in
+const verifySession = (req, res, next) => {
+    if (!req.session.userId) {
+        return res.status(401).send('Access Denied: You are not logged in');
     }
     next();
-  };
+};
 
-// Middleware to verify session cookie
-const verifySession = (req, res, next) => {
-    const sessionId = req.cookies.sessionId;
-
-    if (!sessionId) {
-        return res.status(401).send('Access Denied: Session ID is not provided');
+// Middleware to verify if a user is logged in and an admin
+const verifyAdmin = (req, res, next) => {
+    if (!req.session.userId || !req.session.isAdmin) {
+        return res.status(403).send('Unauthorized');
     }
-
-    // Perform any necessary verification of the session ID
-    // For example, you can query the database to validate the session
-
-    // Assuming session validation is successful
     next();
 };
 
