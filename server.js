@@ -27,6 +27,8 @@ const dbOptions = {
     database: dbUrl.pathname.substr(1) // Removing the leading slash
 };
 
+// Create the MySQL connection pool
+const pool = mysql.createPool(dbOptions);
 const sessionStore = new MySQLStore(dbOptions);
 
 app.use(session({
