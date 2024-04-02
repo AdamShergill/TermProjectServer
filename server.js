@@ -16,12 +16,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
+const dbUrl = new URL(process.env.JAWSDB_URL);
+
 const pool = mysql.createPool({
     connectionLimit: 10,
-    host: process.env.JAWSDB_URL, // Provided by Heroku
-    user: process.env.JAWSDB_USER,
-    password: process.env.JAWSDB_PASSWORD,
-    database: process.env.JAWSDB_DATABASE
+    host: dbUrl.hostname,
+    user: dbUrl.username,
+    password: dbUrl.password,
+    database: dbUrl.pathname.substr(1), // Remove the leading slash
+    port: dbUrl.port
 });
 
 // Check and create tables if they don't exist
