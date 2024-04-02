@@ -64,7 +64,17 @@ app.use(express.json());
 
 // CORS and Content Security Policy middleware
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // Specify the origin of the client application
+    const allowedOrigins = ['https://heartfelt-gumdrop-74e42a.netlify.app'];
+    const origin = req.headers.origin;
+
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+
+    // Allow credentials for cross-origin requests
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; object-src 'none';");
